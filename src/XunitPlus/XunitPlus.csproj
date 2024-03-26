@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <Title>xunit+</Title>
+        
+        <Nullable>enable</Nullable>
+        <LangVersion>12.0</LangVersion>
+
+        <!-- 语法提示 -->
+        <Features>strict</Features>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+        <Authors>影子和树</Authors>
+        <Company>TINYLIT</Company>
+        <Copyright>2022 TINYLIT.</Copyright>
+        <Description>Automatic injection of constructor parameters.</Description>
+        <RepositoryUrl>https://github.com/tinylit/xunitplus</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/tinylit/xunitplus</PackageProjectUrl>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit.Abstractions" />
+        <Using Include="Xunit.Sdk" />
+
+        <PackageReference Include="Inkslab.DI" Version="1.2.8" />
+
+        <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
+
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.0" />
+        <PackageReference Include="xunit.extensibility.execution" Version="[2.4.2, 3.0.0)"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(PackageId).targets" Pack="True" PackagePath="build\netstandard2.1;buildTransitive\netstandard2.1;buildMultiTargeting" />
+
+        <None Include="tools\*.*" PackagePath="tools" Pack="true" />
+    </ItemGroup>
+</Project>
