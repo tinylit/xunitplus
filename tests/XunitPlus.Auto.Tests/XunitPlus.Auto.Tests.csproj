@@ -10,7 +10,7 @@
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
-    <Import Project="../../src/XunitPlus/XunitPlus.targets"/>
+    <Import Project="../../src/XunitPlus/xunitPlus.targets"/>
     
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0"/>

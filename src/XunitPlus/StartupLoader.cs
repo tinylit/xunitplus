@@ -34,7 +34,7 @@ internal static class StartupLoader
             ? CreateStartup(serviceType, startupType)
             : null;
 
-        var hostBuilder = CreateHostBuilder(assemblyName, startup, startupType, createHostBuilderMethod) ?? new HostBuilder();
+        var hostBuilder = CreateHostBuilder(assemblyName, startup, startupType, createHostBuilderMethod) ?? Host.CreateDefaultBuilder();
 
         if (diagnosticMessageSink != null)
             hostBuilder.ConfigureServices(services => services.TryAddSingleton(diagnosticMessageSink));

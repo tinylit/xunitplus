@@ -5,6 +5,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
 
         <Title>xunit+</Title>
+        <PackageId>xunitPlus</PackageId>
+        <Version>1.1.0</Version>
         
         <Nullable>enable</Nullable>
         <LangVersion>12.0</LangVersion>
@@ -30,11 +32,10 @@
         <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
 
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.0" />
-        <PackageReference Include="xunit.extensibility.execution" Version="[2.4.2, 3.0.0)"/>
+        <PackageReference Include="xunit.extensibility.execution" Version="[2.4.2, 3.0.0)" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="$(PackageId).targets" Pack="True" PackagePath="build\netstandard2.1;buildTransitive\netstandard2.1;buildMultiTargeting" />
 
         <None Include="tools\*.*" PackagePath="tools" Pack="true" />
     </ItemGroup>

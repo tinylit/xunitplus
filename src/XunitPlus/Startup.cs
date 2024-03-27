@@ -15,10 +15,7 @@ public class Startup(Type serviceType)
         startup.DoStartup();
     }
 
-    public IHostBuilder CreateHostBuilder()
-        => Host.CreateDefaultBuilder();
-
-    public void ConfigureServices(IServiceCollection services, HostBuilderContext context)
+    public virtual void ConfigureServices(IServiceCollection services, HostBuilderContext context)
         => services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
             .DependencyInjection(new DependencyInjectionOptions(), context, context.Configuration, context.HostingEnvironment)
             .SeekAssemblies()
