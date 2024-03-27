@@ -6,7 +6,7 @@
 
         <Title>xunit+</Title>
         <PackageId>xunitPlus</PackageId>
-        <Version>1.1.0</Version>
+        <Version>1.2.0</Version>
         
         <Nullable>enable</Nullable>
         <LangVersion>12.0</LangVersion>
@@ -36,6 +36,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="$(PackageId).targets" Pack="True" PackagePath="build\netstandard2.1;buildTransitive\netstandard2.1;buildMultiTargeting" />
 
         <None Include="tools\*.*" PackagePath="tools" Pack="true" />
     </ItemGroup>
