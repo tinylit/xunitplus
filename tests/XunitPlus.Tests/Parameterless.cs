@@ -11,5 +11,6 @@ public class Parameterless
     [Fact]
     public void Test()
     {
+        
     }
 }

@@ -148,16 +148,13 @@ internal static class StartupLoader
 
         var parameterInfos = ctor.GetParameters();
 
-        switch (parameterInfos.Length)
+        return parameterInfos.Length switch
         {
-            case 0:
-                return Activator.CreateInstance(startupType);
-            case 1 when parameterInfos.All(x => x.ParameterType == typeof(Type)):
-                return Activator.CreateInstance(startupType, new object[1] { serviceType });
-            default:
-                throw new InvalidOperationException(
-                    $"'{startupType.FullName}' must have a single parameterless public constructor, or public constructor with a single parameter of type 'Type'.");
-        }
+            0 => Activator.CreateInstance(startupType),
+            1 when parameterInfos.All(x => x.ParameterType == typeof(Type)) => Activator.CreateInstance(startupType, [serviceType]),
+            _ => throw new InvalidOperationException(
+                                $"'{startupType.FullName}' must have a single parameterless public constructor, or public constructor with a single parameter of type 'Type'."),
+        };
     }
 
     public static IHostBuilder? CreateHostBuilder(AssemblyName? assemblyName, object? startup, Type startupType,
