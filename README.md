@@ -4,9 +4,9 @@
 ![language](https://img.shields.io/github/languages/top/tinylit/xunitplus.svg)
 ![codeSize](https://img.shields.io/github/languages/code-size/tinylit/xunitplus.svg)
 
-### “xunit+”是什么？
+### “[xunit+](https://www.nuget.org/packages/xunitPlus/)”是什么？
 
-xunit+ 是基于“xunit”再结合“Inkslab”对构造函数参数进行自动注入的单元测试包。
+[xunit+](https://www.nuget.org/packages/xunitPlus/) 是基于“[xunit](https://github.com/xunit/xunit.git)”再结合“[inkslab](https://github.com/tinylit/inkslab.git)”对构造函数参数进行自动注入的单元测试包。
 
 ### 如何安装？
 First, [install NuGet](http://docs.nuget.org/docs/start-here/installing-nuget). Then, install [xunit+](https://www.nuget.org/packages/xunitPlus/) from the package manager console: 
