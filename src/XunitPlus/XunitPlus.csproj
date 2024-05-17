@@ -6,7 +6,7 @@
 
         <Title>xunit+</Title>
         <PackageId>xunitPlus</PackageId>
-        <Version>1.2.0</Version>
+        <Version>1.2.1</Version>
         
         <Nullable>enable</Nullable>
         <LangVersion>12.0</LangVersion>
@@ -27,7 +27,7 @@
         <Using Include="Xunit.Abstractions" />
         <Using Include="Xunit.Sdk" />
 
-        <PackageReference Include="Inkslab.DI" Version="1.2.8" />
+        <PackageReference Include="Inkslab.DI" Version="1.2.8.5" />
 
         <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
 

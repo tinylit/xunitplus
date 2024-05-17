@@ -20,5 +20,6 @@ public class Startup(Type serviceType)
             .DependencyInjection(new DependencyInjectionOptions(), context, context.Configuration, context.HostingEnvironment)
             .SeekAssemblies()
             .ConfigureByDefined()
-            .AddTransient(serviceType);
+            .AddTransient(serviceType)
+            .ConfigureByAuto();
 }

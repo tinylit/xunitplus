@@ -26,7 +26,7 @@ internal sealed class HostManager(AssemblyName assemblyName, IMessageSink diagno
 
         do
         {
-            var startupType = declaringType.GetNestedType("Startup", BindingFlags.Static | BindingFlags.Instance | BindingFlags.Default | BindingFlags.NonPublic);
+            var startupType = declaringType.GetNestedType("Startup", BindingFlags.Static | BindingFlags.Instance | BindingFlags.Default | BindingFlags.Public | BindingFlags.NonPublic);
 
             if (startupType is null)
             {
@@ -45,23 +45,23 @@ internal sealed class HostManager(AssemblyName assemblyName, IMessageSink diagno
             var startupTypeString = "Startup";
 
             bool flag = ns?.Length > 0;
-            
+
             if (flag)
                 startupTypeString = ns + ".Startup";
 
             var startupType = testClassType.Assembly.GetType(startupTypeString);
-            
-            if (startupType != null) 
+
+            if (startupType != null)
                 return startupType;
 
             if (flag)
             {
                 var index = ns!.LastIndexOf('.');
-                
+
                 if (index > 0)
                 {
                     ns = ns[..index];
-                    
+
                     continue;
                 }
             }

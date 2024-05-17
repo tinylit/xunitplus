@@ -1,5 +1,3 @@
-using Xunit;
-
 namespace XunitPlus;
 
 public class XunitPlusTestMethodRunner(
@@ -17,9 +15,6 @@ public class XunitPlusTestMethodRunner(
     // This method has been slightly modified from the original implementation to run tests in parallel
     protected override async Task<RunSummary> RunTestCasesAsync()
     {
-        if (TestMethod.TestClass.Class.GetCustomAttributes(typeof(CollectionAttribute)).Any())
-            return await base.RunTestCasesAsync();
-
         // Respect MaxParallelThreads by using the MaxConcurrencySyncContext if it exists, mimicking how collections are run
         var scheduler = SynchronizationContext.Current == null
             ? TaskScheduler.Default
