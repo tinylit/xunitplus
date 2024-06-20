@@ -32,9 +32,6 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
             {
                 var serviceType = group.Key.Class.ToRuntimeType();
 
-                //? 先触发静态构造函数，然后再进行宿主操作。
-                RuntimeHelpers.RunClassConstructor(serviceType.TypeHandle);
-
                 if (serviceType.GetConstructor(Type.EmptyTypes) is null)
                 {
                     var context = hostManager.CreateHost(serviceType);
