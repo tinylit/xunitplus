@@ -149,9 +149,7 @@ public class XunitPlusTestClassRunner(
         }
         catch (Exception ex)
         {
-            while (ex is TargetInvocationException { InnerException: not null } tie) ex = tie.InnerException;
-
-            while (ex is AggregateException { InnerException: not null } ae) ex = ae.InnerException;
+            ex = ex.Unwrap();
 
             DiagnosticMessageSink.OnMessage(new DiagnosticMessage(
                 $"Test case orderer '{TestCaseOrderer.GetType().FullName}' throw '{ex.GetType().FullName}' during ordering: {ex.Message}{Environment.NewLine}{ex.StackTrace}"));

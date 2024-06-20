@@ -20,11 +20,13 @@ internal static class StartupLoader
     public static (IHostBuilder, object?, MethodInfo?, MethodInfo?) CreateHostBuilder(Type serviceType, Type startupType,
         AssemblyName? assemblyName, IMessageSink? diagnosticMessageSink)
     {
-        var createHostBuilderMethod = FindMethod(startupType, nameof(CreateHostBuilder), typeof(IHostBuilder));
-        var configureHostMethod = FindMethod(startupType, nameof(ConfigureHost));
-        var configureServicesMethod = FindMethod(startupType, nameof(ConfigureServices));
-        var configureMethod = FindMethod(startupType, nameof(Configure));
-        var buildHostMethod = FindMethod(startupType, nameof(BuildHost), typeof(IHost));
+        var methodInfos = startupType.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+
+        var createHostBuilderMethod = FindMethod(startupType, methodInfos, nameof(CreateHostBuilder), typeof(IHostBuilder));
+        var configureHostMethod = FindMethod(startupType, methodInfos, nameof(ConfigureHost));
+        var configureServicesMethod = FindMethod(startupType, methodInfos, nameof(ConfigureServices));
+        var configureMethod = FindMethod(startupType, methodInfos, nameof(Configure));
+        var buildHostMethod = FindMethod(startupType, methodInfos, nameof(BuildHost), typeof(IHost));
 
         var startup = createHostBuilderMethod is { IsStatic: false } ||
                       configureHostMethod is { IsStatic: false } ||
@@ -45,15 +47,13 @@ internal static class StartupLoader
 
         hostBuilder.ConfigureServices(services =>
         {
-            var httpContextAccessorType = typeof(IHttpContextAccessor);
+            services.TryAddSingleton<ITestOutput, TestOutput>();
+            services.TryAddSingleton<ITestOutputHelper, TestOutputHelper>();
 
-            if (services.All(x => x.ServiceType != httpContextAccessorType))
+            services.TryAddSingleton<IHttpContextAccessor>(new HttpContextAccessor
             {
-                services.TryAddSingleton<IHttpContextAccessor>(new HttpContextAccessor
-                {
-                    HttpContext = new DefaultHttpContext()
-                });
-            }
+                HttpContext = new DefaultHttpContext()
+            });
         });
 
         return (hostBuilder, startup, buildHostMethod, configureMethod);
@@ -164,7 +164,7 @@ internal static class StartupLoader
 
         var parameters = method.GetParameters();
         if (parameters.Length == 0)
-            return (IHostBuilder)method.Invoke(method.IsStatic ? null : startup, Array.Empty<object>());
+            return (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, Array.Empty<object>());
 
         if (parameters.Length > 1 || parameters[0].ParameterType != typeof(AssemblyName))
             throw new InvalidOperationException(
@@ -174,7 +174,7 @@ internal static class StartupLoader
             throw new InvalidOperationException(
                 $"The '{method.Name}' method of startup type '{startupType.FullName}' must parameterless when use XunitWebApplicationFactory.");
 
-        return (IHostBuilder)method.Invoke(method.IsStatic ? null : startup, [assemblyName]);
+        return (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, [assemblyName]);
     }
 
     public static void ConfigureHost(IHostBuilder builder, object? startup, Type startupType, MethodInfo? method)
@@ -241,20 +241,23 @@ internal static class StartupLoader
         return (IHost?)method.Invoke(method.IsStatic ? null : startup, [hostBuilder]);
     }
 
-    public static MethodInfo? FindMethod(Type startupType, string methodName) =>
-        FindMethod(startupType, methodName, typeof(void));
+    public static MethodInfo? FindMethod(Type startupType, MethodInfo[] methodInfos, string methodName) =>
+        FindMethod(startupType, methodInfos, methodName, typeof(void));
 
-    public static MethodInfo? FindMethod(Type startupType, string methodName, Type returnType)
+    public static MethodInfo? FindMethod(Type startupType, MethodInfo[] methodInfos, string methodName, Type returnType)
     {
-        var selectedMethods = startupType.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
-            .Where(method => method.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase)).ToList();
+        var selectedMethods = Array.FindAll(methodInfos, x => x.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase));
 
-        if (selectedMethods.Count > 1)
+        if (selectedMethods.Length > 1)
             throw new InvalidOperationException(
                 $"Having multiple overloads of method '{methodName}' is not supported.");
 
-        var methodInfo = selectedMethods.FirstOrDefault();
-        if (methodInfo == null) return methodInfo;
+        if (selectedMethods.Length == 0)
+        {
+            return null;
+        }
+
+        var methodInfo = selectedMethods[0];
 
         if (returnType == typeof(void))
         {
@@ -263,8 +266,10 @@ internal static class StartupLoader
                     $"The '{methodInfo.Name}' method in the type '{startupType.FullName}' must have no return type.");
         }
         else if (!returnType.IsAssignableFrom(methodInfo.ReturnType))
+        {
             throw new InvalidOperationException(
                 $"The '{methodInfo.Name}' method in the type '{startupType.FullName}' return type must assignable to '{returnType}'.");
+        }
 
         return methodInfo;
     }

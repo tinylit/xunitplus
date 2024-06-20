@@ -36,6 +36,7 @@ internal sealed class HostManager(AssemblyName assemblyName, IMessageSink diagno
             }
 
             return startupType;
+
         } while (declaringType != null);
 
         var ns = testClassType.Namespace;
