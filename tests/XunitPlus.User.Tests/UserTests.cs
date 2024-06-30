@@ -22,6 +22,7 @@ public class UserAccountAttribute(long id, string role) : UserAttribute
 }
 
 [UserAccount(1, "User")]
+[PatternSeek("XunitPlus.*")]
 public class UserTests(IHttpContextAccessor accessor)
 {
     [Fact]
