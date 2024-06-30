@@ -169,3 +169,4 @@ PM> Install-Package xunitPlus
   - 使用 `AuthorizationAttribute` 添加认证请求头。
   - 继承 `HttpContextAttribute` 创建 `HttpContext` 请求上下文。
   - 继承 `UserAttribute` 创建请求上下文的用户信息。
+  - 使用 `PatternSeekAttribute` 指定自动依赖注入扫描 `DLL` 文件的范围，如：`Inkslab.*.dll`。

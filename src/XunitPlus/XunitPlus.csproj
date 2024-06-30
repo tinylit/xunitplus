@@ -21,11 +21,19 @@
 		<Authors>影子和树</Authors>
 		<Company>TINYLIT</Company>
 		<Copyright>2022 TINYLIT.</Copyright>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Description>Automatic injection of constructor parameters.</Description>
 		<RepositoryUrl>https://github.com/tinylit/xunitplus</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/tinylit/xunitplus</PackageProjectUrl>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+	
 	<ItemGroup>
 		<Using Include="Xunit.Abstractions" />
 		<Using Include="Xunit.Sdk" />
