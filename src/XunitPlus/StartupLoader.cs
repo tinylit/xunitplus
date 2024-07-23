@@ -47,7 +47,6 @@ internal static class StartupLoader
 
         hostBuilder.ConfigureServices(services =>
         {
-            services.TryAddSingleton<ITestOutput, TestOutput>();
             services.TryAddSingleton<ITestOutputHelper, TestOutputHelper>();
 
             services.TryAddSingleton<IHttpContextAccessor>(new HttpContextAccessor
