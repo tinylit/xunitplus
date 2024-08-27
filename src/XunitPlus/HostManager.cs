@@ -6,8 +6,8 @@ namespace XunitPlus;
 internal sealed class HostManager(AssemblyName assemblyName, IMessageSink diagnosticMessageSink)
     : IHostedService, IDisposable
 {
-    private readonly List<IHost> hosts = [];
-    private readonly Dictionary<Type, DependencyInjectionContext> hostMap = [];
+    private readonly List<IHost> _hosts = [];
+    private readonly Dictionary<Type, DependencyInjectionContext> _hostMap = [];
 
     private static Type FindStartup(Type testClassType, out bool shared)
     {
@@ -48,12 +48,16 @@ internal sealed class HostManager(AssemblyName assemblyName, IMessageSink diagno
             bool flag = ns?.Length > 0;
 
             if (flag)
+            {
                 startupTypeString = ns + ".Startup";
+            }
 
             var startupType = testClassType.Assembly.GetType(startupTypeString);
 
             if (startupType != null)
+            {
                 return startupType;
+            }
 
             if (flag)
             {
@@ -79,34 +83,36 @@ internal sealed class HostManager(AssemblyName assemblyName, IMessageSink diagno
 
         if (shared)
         {
-            if (hostMap.TryGetValue(startupType, out var startup))
+            if (_hostMap.TryGetValue(startupType, out var startup))
+            {
                 return startup;
+            }
         }
 
         var host = StartupLoader.CreateHost(serviceType, startupType, assemblyName, diagnosticMessageSink);
 
         if (shared)
         {
-            hostMap.TryAdd(startupType, host);
+            _hostMap.TryAdd(startupType, host);
         }
 
-        hosts.Add(host.Host);
+        _hosts.Add(host.Host);
 
         return host;
     }
 
     public Task StartAsync(CancellationToken cancellationToken) =>
-        Task.WhenAll(hosts.Select(x => x.StartAsync(cancellationToken)));
+        Task.WhenAll(_hosts.Select(x => x.StartAsync(cancellationToken)));
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        hosts.Reverse();
+        _hosts.Reverse();
 
-        return Task.WhenAll(hosts.Select(x => x.StopAsync(cancellationToken)));
+        return Task.WhenAll(_hosts.Select(x => x.StopAsync(cancellationToken)));
     }
 
     //DisposalTracker not support IAsyncDisposable
-    public void Dispose() => Task.WaitAll(hosts.Select(DisposeAsync).ToArray());
+    public void Dispose() => Task.WaitAll(_hosts.Select(DisposeAsync).ToArray());
 
     private static Task DisposeAsync(IDisposable disposable)
     {

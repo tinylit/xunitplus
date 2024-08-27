@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace XunitPlus
+﻿namespace XunitPlus
 {
     /// <summary>
     /// 匹配查找，用于<see cref="Startup"/>中，限制查找依赖注入的范围。

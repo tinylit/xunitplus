@@ -39,7 +39,9 @@ internal static class StartupLoader
         var hostBuilder = CreateHostBuilder(assemblyName, startup, startupType, createHostBuilderMethod) ?? Host.CreateDefaultBuilder();
 
         if (diagnosticMessageSink != null)
+        {
             hostBuilder.ConfigureServices(services => services.TryAddSingleton(diagnosticMessageSink));
+        }
 
         ConfigureHost(hostBuilder, startup, startupType, configureHostMethod);
 
@@ -133,15 +135,22 @@ internal static class StartupLoader
     public static object? CreateStartup(Type serviceType, Type startupType)
     {
         if (startupType is null)
+        {
             throw new ArgumentNullException(nameof(startupType));
+        }
 
-        if (startupType is { IsAbstract: true, IsSealed: true }) return null;
+        if (startupType is { IsAbstract: true, IsSealed: true })
+        {
+            return null;
+        }
 
         var ctors = startupType.GetConstructors();
 
         if (ctors.Length != 1)
+        {
             throw new InvalidOperationException(
                 $"'{startupType.FullName}' must have a public constructor.");
+        }
 
         var ctor = ctors[0];
 
@@ -159,38 +168,53 @@ internal static class StartupLoader
     public static IHostBuilder? CreateHostBuilder(AssemblyName? assemblyName, object? startup, Type startupType,
         MethodInfo? method)
     {
-        if (method is null) return null;
+        if (method is null)
+        {
+            return null;
+        }
 
         var parameters = method.GetParameters();
         if (parameters.Length == 0)
-            return (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, Array.Empty<object>());
+        {
+            return (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, []);
+        }
 
         if (parameters.Length > 1 || parameters[0].ParameterType != typeof(AssemblyName))
+        {
             throw new InvalidOperationException(
                 $"The '{method.Name}' method of startup type '{startupType.FullName}' must parameterless or have the single 'AssemblyName' parameter.");
+        }
 
-        if (assemblyName is null)
-            throw new InvalidOperationException(
-                $"The '{method.Name}' method of startup type '{startupType.FullName}' must parameterless when use XunitWebApplicationFactory.");
-
-        return (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, [assemblyName]);
+        return assemblyName is null
+            ? throw new InvalidOperationException(
+                $"The '{method.Name}' method of startup type '{startupType.FullName}' must parameterless when use XunitWebApplicationFactory.")
+            : (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, [assemblyName]);
     }
 
     public static void ConfigureHost(IHostBuilder builder, object? startup, Type startupType, MethodInfo? method)
     {
-        if (method is null) return;
+        if (method is null)
+        {
+            return;
+        }
 
         var parameters = method.GetParameters();
+
         if (parameters.Length != 1 || parameters[0].ParameterType != typeof(IHostBuilder))
+        {
             throw new InvalidOperationException(
                 $"The '{method.Name}' method of startup type '{startupType.FullName}' must have the single 'IHostBuilder' parameter.");
+        }
 
         method.Invoke(method.IsStatic ? null : startup, [builder]);
     }
 
     public static void ConfigureServices(IHostBuilder builder, object? startup, Type startupType, MethodInfo? method)
     {
-        if (method is null) return;
+        if (method is null)
+        {
+            return;
+        }
 
         var parameters = method.GetParameters();
 
@@ -214,7 +238,10 @@ internal static class StartupLoader
     // Not allow async Configure method
     public static void Configure(IServiceProvider provider, object? startup, MethodInfo? method)
     {
-        if (method is null) return;
+        if (method is null)
+        {
+            return;
+        }
 
         using var scope = provider.CreateScope();
 
@@ -226,18 +253,23 @@ internal static class StartupLoader
 
     public static IHost? BuildHost(IHostBuilder hostBuilder, object? startup, Type startupType, MethodInfo? method)
     {
-        if (method is null) return null;
+        if (method is null)
+        {
+            return null;
+        }
 
         if (!typeof(IHost).IsAssignableFrom(method.ReturnType))
+        {
             throw new InvalidOperationException(
                 $"The '{method.Name}' method in the type '{startupType.FullName}' return type must assignable to '{typeof(IHost)}'.");
+        }
 
         var parameters = method.GetParameters();
-        if (parameters.Length != 1 || parameters[0].ParameterType != typeof(IHostBuilder))
-            throw new InvalidOperationException(
-                $"The '{method.Name}' method of startup type '{startupType.FullName}' must have the single 'IHostBuilder' parameter.");
 
-        return (IHost?)method.Invoke(method.IsStatic ? null : startup, [hostBuilder]);
+        return parameters.Length != 1 || parameters[0].ParameterType != typeof(IHostBuilder)
+            ? throw new InvalidOperationException(
+                $"The '{method.Name}' method of startup type '{startupType.FullName}' must have the single 'IHostBuilder' parameter.")
+            : (IHost?)method.Invoke(method.IsStatic ? null : startup, [hostBuilder]);
     }
 
     public static MethodInfo? FindMethod(Type startupType, MethodInfo[] methodInfos, string methodName) =>
@@ -248,8 +280,10 @@ internal static class StartupLoader
         var selectedMethods = Array.FindAll(methodInfos, x => x.Name.Equals(methodName, StringComparison.OrdinalIgnoreCase));
 
         if (selectedMethods.Length > 1)
+        {
             throw new InvalidOperationException(
                 $"Having multiple overloads of method '{methodName}' is not supported.");
+        }
 
         if (selectedMethods.Length == 0)
         {
@@ -261,8 +295,10 @@ internal static class StartupLoader
         if (returnType == typeof(void))
         {
             if (methodInfo.ReturnType != returnType)
+            {
                 throw new InvalidOperationException(
                     $"The '{methodInfo.Name}' method in the type '{startupType.FullName}' must have no return type.");
+            }
         }
         else if (!returnType.IsAssignableFrom(methodInfo.ReturnType))
         {

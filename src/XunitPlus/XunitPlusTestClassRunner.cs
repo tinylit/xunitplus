@@ -18,7 +18,7 @@ public class XunitPlusTestClassRunner(
     : XunitTestClassRunner(testClass, @class, testCases, diagnosticMessageSink,
         messageBus, testCaseOrderer, aggregator, cancellationTokenSource, collectionFixtureMappings)
 {
-    private readonly AsyncServiceScope serviceScope = context.Services.CreateAsyncScope();
+    private readonly AsyncServiceScope _serviceScope = context.Services.CreateAsyncScope();
 
     private IDictionary<Type, object> CollectionFixtureMappings { get; } = collectionFixtureMappings;
 
@@ -26,12 +26,16 @@ public class XunitPlusTestClassRunner(
     protected override object?[] CreateTestClassConstructorArguments()
     {
         if ((!Class.Type.IsAbstract ? 0 : Class.Type.IsSealed ? 1 : 0) != 0)
-            return Array.Empty<object?>();
+        {
+            return [];
+        }
 
         var constructor = SelectTestClassConstructor();
 
         if (constructor is null)
-            return Array.Empty<object?>();
+        {
+            return [];
+        }
 
         var parameters = constructor.GetParameters();
 
@@ -81,7 +85,7 @@ public class XunitPlusTestClassRunner(
             return true;
         }
 
-        argumentValue = serviceScope.ServiceProvider.GetService(parameter.ParameterType);
+        argumentValue = _serviceScope.ServiceProvider.GetService(parameter.ParameterType);
 
         return argumentValue != null;
     }
@@ -104,19 +108,30 @@ public class XunitPlusTestClassRunner(
         var missingParameters = new List<ParameterInfo>();
         var ctorArgs = ctors[0].GetParameters().Select(p =>
         {
-            if (CollectionFixtureMappings.TryGetValue(p.ParameterType, out var arg)) return arg;
+            if (CollectionFixtureMappings.TryGetValue(p.ParameterType, out var arg))
+            {
+                return arg;
+            }
 
-            arg = serviceScope.ServiceProvider.GetService(p.ParameterType);
+            arg = _serviceScope.ServiceProvider.GetService(p.ParameterType);
 
-            if (arg is null) missingParameters.Add(p);
+            if (arg is null)
+            {
+                missingParameters.Add(p);
+            }
 
             return arg;
         }).ToArray();
 
         if (missingParameters.Count > 0)
+        {
             Aggregator.Add(new TestClassException(
                 $"Class fixture type '{fixtureType.FullName}' had one or more unresolved constructor arguments: {string.Join(", ", missingParameters.Select(p => $"{p.ParameterType.Name} {p.Name}"))}"));
-        else Aggregator.Run(() => ClassFixtureMappings[fixtureType] = ctors[0].Invoke(ctorArgs));
+        }
+        else
+        {
+            Aggregator.Run(() => ClassFixtureMappings[fixtureType] = ctors[0].Invoke(ctorArgs));
+        }
     }
 
     /// <inheritdoc />
@@ -136,7 +151,7 @@ public class XunitPlusTestClassRunner(
             }
         }
 
-        await serviceScope.DisposeAsync();
+        await _serviceScope.DisposeAsync();
     }
 
     // This method has been slightly modified from the original implementation to run tests in parallel
@@ -165,7 +180,9 @@ public class XunitPlusTestClassRunner(
         var summary = new RunSummary();
 
         foreach (var methodSummary in await Task.WhenAll(methodTasks))
+        {
             summary.Aggregate(methodSummary);
+        }
 
         return summary;
     }

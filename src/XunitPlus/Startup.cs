@@ -1,4 +1,3 @@
-using Inkslab;
 using Inkslab.DI.Options;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,16 +12,6 @@ namespace XunitPlus;
 /// <param name="serviceType">当前单元测试类的类型。</param>
 public class Startup(Type serviceType)
 {
-    /// <summary>
-    /// 静态构造函数。
-    /// </summary>
-    static Startup()
-    {
-        using var startup = new XStartup("Inkslab.*.dll");
-
-        startup.DoStartup();
-    }
-
     /// <summary>
     /// 配置服务。
     /// </summary>

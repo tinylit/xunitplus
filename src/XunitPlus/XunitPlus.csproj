@@ -9,7 +9,7 @@
 
 		<Title>xunit+</Title>
 		<PackageId>xunitPlus</PackageId>
-		<Version>1.2.4</Version>
+		<Version>1.2.5</Version>
 
 		<Nullable>enable</Nullable>
 		<LangVersion>12.0</LangVersion>
@@ -21,7 +21,9 @@
 		<Authors>影子和树</Authors>
 		<Company>TINYLIT</Company>
 		<Copyright>2022 TINYLIT.</Copyright>
+		<RepositoryType>git</RepositoryType>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Description>Automatic injection of constructor parameters.</Description>
 		<RepositoryUrl>https://github.com/tinylit/xunitplus</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/tinylit/xunitplus</PackageProjectUrl>
@@ -29,6 +31,13 @@
 
 	<ItemGroup>
 		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\LICENSE">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>

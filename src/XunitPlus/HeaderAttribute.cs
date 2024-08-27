@@ -25,8 +25,10 @@ public class HeaderAttribute : Attribute
     public HeaderAttribute(string key, string stringValues)
     {
         if (string.IsNullOrEmpty(key))
+        {
             throw new ArgumentException(nameof(key));
-        
+        }
+
         Key = key;
         StringValues = stringValues;
     }

@@ -1,3 +1,4 @@
+using Inkslab;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -5,27 +6,30 @@ namespace XunitPlus;
 
 public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
 {
-    private readonly HostManager hostManager;
+    private readonly HostManager _hostManager;
 
     public XunitPlusTestFrameworkExecutor(
         AssemblyName assemblyName,
         ISourceInformationProvider sourceInformationProvider,
         IMessageSink messageSink) : base(assemblyName, sourceInformationProvider, messageSink)
     {
-        DisposalTracker.Add(hostManager = new(assemblyName, messageSink));
+        DisposalTracker.Add(_hostManager = new(assemblyName, messageSink));
     }
 
     protected override async void RunTestCases(IEnumerable<IXunitTestCase> testCases, IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions)
     {
-        var results = testCases as List<IXunitTestCase> ?? testCases.ToList();
+        using (var startup = new XStartup("Inkslab.*.dll"))
+        {
+            startup.DoStartup();
+        }
 
         var exceptions = new List<Exception>();
 
+        var results = new List<IXunitTestCase>();
+
         var contexts = new Dictionary<ITestClass, DependencyInjectionContext>();
 
-        var errorTests = new List<ITestClass>();
-
-        foreach (var group in results
+        foreach (var group in testCases
                      .GroupBy(tc => tc.TestMethod.TestClass))
         {
             try
@@ -37,25 +41,22 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
 
                 if (serviceType.GetConstructor(Type.EmptyTypes) is null)
                 {
-                    var context = hostManager.CreateHost(serviceType);
+                    var context = _hostManager.CreateHost(serviceType);
 
                     contexts.Add(group.Key, context);
                 }
+
+                results.AddRange(group);
             }
             catch (Exception ex)
             {
-                errorTests.Add(group.Key);
-
                 exceptions.Add(ex.Unwrap());
             }
         }
 
-        if (errorTests.Count > 0) //? 存在无法注入的测试类。
-            results.RemoveAll(x => errorTests.Contains(x.TestMethod.TestClass));
-
         try
         {
-            await hostManager.StartAsync(default);
+            await _hostManager.StartAsync(default);
         }
         catch (Exception ex)
         {
@@ -64,8 +65,9 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
 
         using var runner = new XunitPlusTestAssemblyRunner(contexts, TestAssembly,
             results, DiagnosticMessageSink, executionMessageSink, executionOptions, exceptions);
+
         await runner.RunAsync();
 
-        await hostManager.StopAsync(default);
+        await _hostManager.StopAsync(default);
     }
 }
