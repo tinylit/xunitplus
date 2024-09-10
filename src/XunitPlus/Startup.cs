@@ -7,16 +7,16 @@ using System.Reflection;
 namespace XunitPlus;
 
 /// <summary>
-/// Ä¬ÈÏÆô¶¯ÀàĞÍ¡£
+/// å¯åŠ¨ç±»ã€‚
 /// </summary>
-/// <param name="serviceType">µ±Ç°µ¥Ôª²âÊÔÀàµÄÀàĞÍ¡£</param>
+/// <param name="serviceType">æœåŠ¡ç±»å‹ã€‚</param>
 public class Startup(Type serviceType)
 {
     /// <summary>
-    /// ÅäÖÃ·şÎñ¡£
+    /// é…ç½®æœåŠ¡ã€‚
     /// </summary>
-    /// <param name="services">·şÎñ³Ø¡£</param>
-    /// <param name="context">ËŞÖ÷ÉÏÏÂÎÄ¡£</param>
+    /// <param name="services">æœåŠ¡æ± ã€‚</param>
+    /// <param name="context">ä¸Šä¸‹æ–‡ã€‚</param>
     public virtual void ConfigureServices(IServiceCollection services, HostBuilderContext context)
     {
         var patternSeeks = serviceType.GetCustomAttributes<PatternSeekAttribute>();
@@ -44,6 +44,7 @@ public class Startup(Type serviceType)
         }
 
         dependencyInjectionServices.ConfigureByDefined()
+            .IgnoreType<ITestOutputHelper>()
             .AddTransient(serviceType)
             .ConfigureByAuto();
     }

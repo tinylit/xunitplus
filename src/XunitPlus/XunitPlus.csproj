@@ -47,7 +47,7 @@
 		<Using Include="Xunit.Abstractions" />
 		<Using Include="Xunit.Sdk" />
 
-		<PackageReference Include="Inkslab.DI" Version="1.2.8.5" />
+		<PackageReference Include="Inkslab.DI" Version="1.2.13" />
 		<PackageReference Include="xunit.extensibility.execution" Version="[2.5.1, 3.0.0)" />
 	</ItemGroup>
 

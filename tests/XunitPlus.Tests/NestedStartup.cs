@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Xunit.Abstractions;
 
 namespace XunitPlus.Tests;
 
@@ -40,18 +41,22 @@ public class DependencyInjectionByNestedStartup : IDependencyInjectionByNestedSt
 /// <summary>
 /// 内嵌的启动。
 /// </summary>
-public class NestedStartup(IDependencyInjectionByNestedStartup dependency)
+public class NestedStartup(ITestOutputHelper helper, IDependencyInjectionByNestedStartup dependency)
 {
     /// <summary>
     /// 测试。
     /// </summary>
     [Fact]
-    public void Test() => dependency.Test();
+    public void Test()
+    {
+        helper.WriteLine("测试");
+        dependency.Test();
+    }
 
     private /*static */ class Startup //? 不限访问级别。
     {
         public /* static */ IHostBuilder CreateHostBuilder() => new HostBuilder();
-        
+
         public /* static */ void ConfigureServices(IServiceCollection services)
         {
             services.AddTransient<IDependencyInjectionByNestedStartup, DependencyInjectionByNestedStartup>();
