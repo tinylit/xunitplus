@@ -1,9 +1,11 @@
-﻿namespace XunitPlus
+﻿using Inkslab;
+
+namespace XunitPlus
 {
     /// <summary>
-    /// 匹配查找，用于<see cref="Startup"/>中，限制查找依赖注入的范围。
+    /// 匹配查找，用于<see cref="Startup"/>中，限制查找依赖注入的范围。定义在程序集时，用于查找“<see cref="IStartup"/>”实现作为启动配置项，默认使用“Inkslab.*”。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class, AllowMultiple = true)]
     public sealed class PatternSeekAttribute : Attribute
     {
         /// <summary>
@@ -17,7 +19,6 @@
             {
                 throw new ArgumentException($"“{nameof(pattern)}”不能为 null 或空。", nameof(pattern));
             }
-
             Pattern = pattern;
         }
 

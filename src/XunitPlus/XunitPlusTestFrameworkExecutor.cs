@@ -6,6 +6,7 @@ namespace XunitPlus;
 
 public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
 {
+    private readonly Assembly _assembly;
     private readonly HostManager _hostManager;
 
     public XunitPlusTestFrameworkExecutor(
@@ -13,14 +14,33 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
         ISourceInformationProvider sourceInformationProvider,
         IMessageSink messageSink) : base(assemblyName, sourceInformationProvider, messageSink)
     {
+        _assembly = Assembly.Load(assemblyName);
+
         DisposalTracker.Add(_hostManager = new(assemblyName, messageSink));
     }
 
     protected override async void RunTestCases(IEnumerable<IXunitTestCase> testCases, IMessageSink executionMessageSink, ITestFrameworkExecutionOptions executionOptions)
     {
-        using (var startup = new XStartup("Inkslab.*.dll"))
+        var patternSeeks = _assembly.GetCustomAttributes(typeof(PatternSeekAttribute), true);
+
+        if (patternSeeks is null || patternSeeks.Length == 0)
         {
-            startup.DoStartup();
+            using (var startup = new XStartup("Inkslab.*.dll"))
+            {
+                startup.DoStartup();
+            }
+        }
+        else
+        {
+            var pattarns = patternSeeks
+                .Cast<PatternSeekAttribute>()
+                .Select(x => x.Pattern)
+                .ToArray();
+
+            using (var startup = new XStartup(pattarns))
+            {
+                startup.DoStartup();
+            }
         }
 
         var exceptions = new List<Exception>();

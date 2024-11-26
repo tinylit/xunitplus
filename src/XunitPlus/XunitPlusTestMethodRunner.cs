@@ -29,7 +29,9 @@ public class XunitPlusTestMethodRunner(
         var summary = new RunSummary();
 
         foreach (var caseSummary in await Task.WhenAll(tasks))
+        {
             summary.Aggregate(caseSummary);
+        }
 
         return summary;
     }
