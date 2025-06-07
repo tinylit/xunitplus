@@ -9,9 +9,18 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
+    
+    <ItemGroup>
+        <AssemblyAttribute Include="XunitPlus.PatternSeek">
+            <_Parameter1>Inkslab.*</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="XunitPlus.PatternSeek">
+            <_Parameter1>XunitPlus.*</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
 
     <Import Project="../../src/XunitPlus/xunitPlus.targets" />
-    
+
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
         <PackageReference Include="xunit" Version="2.7.0" />
@@ -24,9 +33,9 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
     </ItemGroup>
-    
+
     <ItemGroup>
-      <ProjectReference Include="..\..\src\XunitPlus\XunitPlus.csproj" />
+        <ProjectReference Include="..\..\src\XunitPlus\XunitPlus.csproj" />
     </ItemGroup>
 
 </Project>

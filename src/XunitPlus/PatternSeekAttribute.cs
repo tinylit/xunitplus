@@ -19,6 +19,7 @@ namespace XunitPlus
             {
                 throw new ArgumentException($"“{nameof(pattern)}”不能为 null 或空。", nameof(pattern));
             }
+            
             Pattern = pattern;
         }
 

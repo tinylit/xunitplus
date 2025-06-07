@@ -21,9 +21,17 @@ public class Startup(Type serviceType)
     {
         var patternSeeks = serviceType.GetCustomAttributes<PatternSeekAttribute>();
 
+        if (patternSeeks is null)
+        {
+            patternSeeks = serviceType.Assembly.GetCustomAttributes<PatternSeekAttribute>();
+        }
+        else
+        {
+            patternSeeks = patternSeeks.Union(serviceType.Assembly.GetCustomAttributes<PatternSeekAttribute>() ?? Array.Empty<PatternSeekAttribute>());
+        }
+
         var dependencyInjectionServices = services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
             .DependencyInjection(new DependencyInjectionOptions(), context, context.Configuration, context.HostingEnvironment);
-
 
         if (patternSeeks is null)
         {
@@ -31,7 +39,10 @@ public class Startup(Type serviceType)
         }
         else
         {
-            var pattarns = patternSeeks.Select(x => x.Pattern).ToArray();
+            var pattarns = patternSeeks
+                .Select(x => x.Pattern)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 
             if (pattarns.Length == 0)
             {
