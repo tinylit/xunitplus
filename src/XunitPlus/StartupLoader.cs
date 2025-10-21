@@ -159,7 +159,7 @@ internal static class StartupLoader
         return parameterInfos.Length switch
         {
             0 => Activator.CreateInstance(startupType),
-            1 when parameterInfos.All(x => x.ParameterType == typeof(Type)) => Activator.CreateInstance(startupType, [serviceType]),
+            1 when parameterInfos.All(x => x.ParameterType == typeof(Type)) => Activator.CreateInstance(startupType, new object[] { serviceType }),
             _ => throw new InvalidOperationException(
                                 $"'{startupType.FullName}' must have a single parameterless public constructor, or public constructor with a single parameter of type 'Type'."),
         };
@@ -176,7 +176,7 @@ internal static class StartupLoader
         var parameters = method.GetParameters();
         if (parameters.Length == 0)
         {
-            return (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, []);
+            return (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, Array.Empty<object>());
         }
 
         if (parameters.Length > 1 || parameters[0].ParameterType != typeof(AssemblyName))
@@ -188,7 +188,7 @@ internal static class StartupLoader
         return assemblyName is null
             ? throw new InvalidOperationException(
                 $"The '{method.Name}' method of startup type '{startupType.FullName}' must parameterless when use XunitWebApplicationFactory.")
-            : (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, [assemblyName]);
+            : (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, new object[] { assemblyName });
     }
 
     public static void ConfigureHost(IHostBuilder builder, object? startup, Type startupType, MethodInfo? method)
@@ -206,7 +206,7 @@ internal static class StartupLoader
                 $"The '{method.Name}' method of startup type '{startupType.FullName}' must have the single 'IHostBuilder' parameter.");
         }
 
-        method.Invoke(method.IsStatic ? null : startup, [builder]);
+        method.Invoke(method.IsStatic ? null : startup, new object[] { builder });
     }
 
     public static void ConfigureServices(IHostBuilder builder, object? startup, Type startupType, MethodInfo? method)
@@ -218,21 +218,23 @@ internal static class StartupLoader
 
         var parameters = method.GetParameters();
 
-        builder.ConfigureServices(parameters.Length switch
+        Action<HostBuilderContext, IServiceCollection> configureDelegate = parameters.Length switch
         {
             1 when parameters[0].ParameterType == typeof(IServiceCollection) =>
-                (_, services) => method.Invoke(method.IsStatic ? null : startup, [services]),
+                (_, services) => method.Invoke(method.IsStatic ? null : startup, new object[] { services }),
             2 when parameters[0].ParameterType == typeof(IServiceCollection) &&
                    parameters[1].ParameterType == typeof(HostBuilderContext) =>
                 (context, services) =>
-                    method.Invoke(method.IsStatic ? null : startup, [services, context]),
+                    method.Invoke(method.IsStatic ? null : startup, new object[] { services, context }),
             2 when parameters[1].ParameterType == typeof(IServiceCollection) &&
                    parameters[0].ParameterType == typeof(HostBuilderContext) =>
                 (context, services) =>
-                    method.Invoke(method.IsStatic ? null : startup, [context, services]),
+                    method.Invoke(method.IsStatic ? null : startup, new object[] { context, services }),
             _ => throw new InvalidOperationException(
                 $"The '{method.Name}' method in the type '{startupType.FullName}' must have a 'IServiceCollection' parameter and optional 'HostBuilderContext' parameter.")
-        });
+        };
+        
+        builder.ConfigureServices(configureDelegate);
     }
 
     // Not allow async Configure method
@@ -269,7 +271,7 @@ internal static class StartupLoader
         return parameters.Length != 1 || parameters[0].ParameterType != typeof(IHostBuilder)
             ? throw new InvalidOperationException(
                 $"The '{method.Name}' method of startup type '{startupType.FullName}' must have the single 'IHostBuilder' parameter.")
-            : (IHost?)method.Invoke(method.IsStatic ? null : startup, [hostBuilder]);
+            : (IHost?)method.Invoke(method.IsStatic ? null : startup, new object[] { hostBuilder });
     }
 
     public static MethodInfo? FindMethod(Type startupType, MethodInfo[] methodInfos, string methodName) =>

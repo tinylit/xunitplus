@@ -44,8 +44,15 @@ public /* static */ class Startup
 /// <summary>
 /// 程序集启动。
 /// </summary>
-public class AssemblyStartup(IDependencyInjectionByAssemblyStartup dependency)
+public class AssemblyStartup
 {
+    private readonly IDependencyInjectionByAssemblyStartup _dependency;
+
+    public AssemblyStartup(IDependencyInjectionByAssemblyStartup dependency)
+    {
+        _dependency = dependency;
+    }
+
     static AssemblyStartup()
     {
         Debug.WriteLine("测试构造函数优先。");
@@ -55,5 +62,5 @@ public class AssemblyStartup(IDependencyInjectionByAssemblyStartup dependency)
     /// 测试。
     /// </summary>
     [Fact]
-    public void Test() => dependency.Test();
+    public void Test() => _dependency.Test();
 }

@@ -41,16 +41,25 @@ public class DependencyInjectionByNestedStartup : IDependencyInjectionByNestedSt
 /// <summary>
 /// 内嵌的启动。
 /// </summary>
-public class NestedStartup(ITestOutputHelper helper, IDependencyInjectionByNestedStartup dependency)
+public class NestedStartup
 {
+    private readonly ITestOutputHelper _helper;
+    private readonly IDependencyInjectionByNestedStartup _dependency;
+
+    public NestedStartup(ITestOutputHelper helper, IDependencyInjectionByNestedStartup dependency)
+    {
+        _helper = helper;
+        _dependency = dependency;
+    }
+
     /// <summary>
     /// 测试。
     /// </summary>
     [Fact]
     public void Test()
     {
-        helper.WriteLine("测试");
-        dependency.Test();
+        _helper.WriteLine("测试");
+        _dependency.Test();
     }
 
     private /*static */ class Startup //? 不限访问级别。

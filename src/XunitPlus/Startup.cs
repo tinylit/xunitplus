@@ -9,9 +9,19 @@ namespace XunitPlus;
 /// <summary>
 /// 启动类。
 /// </summary>
-/// <param name="serviceType">服务类型。</param>
-public class Startup(Type serviceType)
+public class Startup
 {
+    private readonly Type _serviceType;
+
+    /// <summary>
+    /// 构造函数。
+    /// </summary>
+    /// <param name="serviceType">服务类型。</param>
+    public Startup(Type serviceType)
+    {
+        _serviceType = serviceType;
+    }
+
     /// <summary>
     /// 配置服务。
     /// </summary>
@@ -19,15 +29,15 @@ public class Startup(Type serviceType)
     /// <param name="context">上下文。</param>
     public virtual void ConfigureServices(IServiceCollection services, HostBuilderContext context)
     {
-        var patternSeeks = serviceType.GetCustomAttributes<PatternSeekAttribute>();
+        var patternSeeks = _serviceType.GetCustomAttributes<PatternSeekAttribute>();
 
         if (patternSeeks is null)
         {
-            patternSeeks = serviceType.Assembly.GetCustomAttributes<PatternSeekAttribute>();
+            patternSeeks = _serviceType.Assembly.GetCustomAttributes<PatternSeekAttribute>();
         }
         else
         {
-            patternSeeks = patternSeeks.Union(serviceType.Assembly.GetCustomAttributes<PatternSeekAttribute>() ?? Array.Empty<PatternSeekAttribute>());
+            patternSeeks = patternSeeks.Union(_serviceType.Assembly.GetCustomAttributes<PatternSeekAttribute>() ?? Array.Empty<PatternSeekAttribute>());
         }
 
         var dependencyInjectionServices = services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
@@ -56,7 +66,7 @@ public class Startup(Type serviceType)
 
         dependencyInjectionServices.ConfigureByDefined()
             .IgnoreType<ITestOutputHelper>()
-            .AddTransient(serviceType)
+            .AddTransient(_serviceType)
             .ConfigureByAuto();
     }
 }

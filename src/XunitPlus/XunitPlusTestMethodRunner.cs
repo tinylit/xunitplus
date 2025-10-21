@@ -1,17 +1,20 @@
 namespace XunitPlus;
 
-public class XunitPlusTestMethodRunner(
-    ITestMethod testMethod,
-    IReflectionTypeInfo @class,
-    IReflectionMethodInfo method,
-    IEnumerable<IXunitTestCase> testCases,
-    IMessageSink diagnosticMessageSink,
-    IMessageBus messageBus,
-    ExceptionAggregator aggregator,
-    CancellationTokenSource cancellationTokenSource,
-    object?[] constructorArguments)
-    : XunitTestMethodRunner(testMethod, @class, method, testCases, diagnosticMessageSink, messageBus, aggregator, cancellationTokenSource, constructorArguments)
+public class XunitPlusTestMethodRunner : XunitTestMethodRunner
 {
+    public XunitPlusTestMethodRunner(
+        ITestMethod testMethod,
+        IReflectionTypeInfo @class,
+        IReflectionMethodInfo method,
+        IEnumerable<IXunitTestCase> testCases,
+        IMessageSink diagnosticMessageSink,
+        IMessageBus messageBus,
+        ExceptionAggregator aggregator,
+        CancellationTokenSource cancellationTokenSource,
+        object?[] constructorArguments)
+        : base(testMethod, @class, method, testCases, diagnosticMessageSink, messageBus, aggregator, cancellationTokenSource, constructorArguments)
+    {
+    }
     // This method has been slightly modified from the original implementation to run tests in parallel
     protected override async Task<RunSummary> RunTestCasesAsync()
     {

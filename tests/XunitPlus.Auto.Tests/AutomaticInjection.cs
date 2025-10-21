@@ -27,11 +27,18 @@ public class DependencyInjectionByAutomaticInjection : IDependencyInjectionByAut
 /// <summary>
 /// 自动注入。
 /// </summary>
-public class AutomaticInjection(IDependencyInjectionByAutomaticInjection dependency)
+public class AutomaticInjection
 {
+    private readonly IDependencyInjectionByAutomaticInjection _dependency;
+
+    public AutomaticInjection(IDependencyInjectionByAutomaticInjection dependency)
+    {
+        _dependency = dependency;
+    }
+
     /// <summary>
     /// 测试。
     /// </summary>
     [Fact]
-    public void Test() => dependency.Test();
+    public void Test() => _dependency.Test();
 }

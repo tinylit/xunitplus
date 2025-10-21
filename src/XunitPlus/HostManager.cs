@@ -3,11 +3,18 @@ using Microsoft.Extensions.Hosting;
 
 namespace XunitPlus;
 
-internal sealed class HostManager(AssemblyName assemblyName, IMessageSink diagnosticMessageSink)
-    : IHostedService, IDisposable
+internal sealed class HostManager : IHostedService, IDisposable
 {
-    private readonly List<IHost> _hosts = [];
-    private readonly Dictionary<Type, DependencyInjectionContext> _hostMap = [];
+    private readonly AssemblyName _assemblyName;
+    private readonly IMessageSink _diagnosticMessageSink;
+    private readonly List<IHost> _hosts = new List<IHost>();
+    private readonly Dictionary<Type, DependencyInjectionContext> _hostMap = new Dictionary<Type, DependencyInjectionContext>();
+
+    public HostManager(AssemblyName assemblyName, IMessageSink diagnosticMessageSink)
+    {
+        _assemblyName = assemblyName;
+        _diagnosticMessageSink = diagnosticMessageSink;
+    }
 
     private static Type FindStartup(Type testClassType, out bool shared)
     {
@@ -89,7 +96,7 @@ internal sealed class HostManager(AssemblyName assemblyName, IMessageSink diagno
             }
         }
 
-        var host = StartupLoader.CreateHost(serviceType, startupType, assemblyName, diagnosticMessageSink);
+        var host = StartupLoader.CreateHost(serviceType, startupType, _assemblyName, _diagnosticMessageSink);
 
         if (shared)
         {

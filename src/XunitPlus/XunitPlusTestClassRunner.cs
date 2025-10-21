@@ -3,38 +3,46 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace XunitPlus;
 
-public class XunitPlusTestClassRunner(
-    DependencyInjectionContext context,
-    bool serializable,
-    ITestClass testClass,
-    IReflectionTypeInfo @class,
-    IEnumerable<IXunitTestCase> testCases,
-    IMessageSink diagnosticMessageSink,
-    IMessageBus messageBus,
-    ITestCaseOrderer testCaseOrderer,
-    ExceptionAggregator aggregator,
-    CancellationTokenSource cancellationTokenSource,
-    IDictionary<Type, object> collectionFixtureMappings)
-    : XunitTestClassRunner(testClass, @class, testCases, diagnosticMessageSink,
-        messageBus, testCaseOrderer, aggregator, cancellationTokenSource, collectionFixtureMappings)
+public class XunitPlusTestClassRunner : XunitTestClassRunner
 {
-    private readonly AsyncServiceScope _serviceScope = context.Services.CreateAsyncScope();
+    private readonly AsyncServiceScope _serviceScope;
+    private readonly bool _serializable;
 
-    private IDictionary<Type, object> CollectionFixtureMappings { get; } = collectionFixtureMappings;
+    public XunitPlusTestClassRunner(
+        DependencyInjectionContext context,
+        bool serializable,
+        ITestClass testClass,
+        IReflectionTypeInfo @class,
+        IEnumerable<IXunitTestCase> testCases,
+        IMessageSink diagnosticMessageSink,
+        IMessageBus messageBus,
+        ITestCaseOrderer testCaseOrderer,
+        ExceptionAggregator aggregator,
+        CancellationTokenSource cancellationTokenSource,
+        IDictionary<Type, object> collectionFixtureMappings)
+        : base(testClass, @class, testCases, diagnosticMessageSink,
+            messageBus, testCaseOrderer, aggregator, cancellationTokenSource, collectionFixtureMappings)
+    {
+        _serviceScope = context.Services.CreateAsyncScope();
+        _serializable = serializable;
+        CollectionFixtureMappings = collectionFixtureMappings;
+    }
+
+    private IDictionary<Type, object> CollectionFixtureMappings { get; }
 
     /// <inheritdoc />
     protected override object?[] CreateTestClassConstructorArguments()
     {
         if ((!Class.Type.IsAbstract ? 0 : Class.Type.IsSealed ? 1 : 0) != 0)
         {
-            return [];
+            return Array.Empty<object?>();
         }
 
         var constructor = SelectTestClassConstructor();
 
         if (constructor is null)
         {
-            return [];
+            return Array.Empty<object?>();
         }
 
         var parameters = constructor.GetParameters();
@@ -191,7 +199,7 @@ public class XunitPlusTestClassRunner(
     protected override Task<RunSummary> RunTestMethodAsync(ITestMethod testMethod,
         IReflectionMethodInfo method, IEnumerable<IXunitTestCase> testCases, object?[] constructorArguments)
     {
-        if (serializable)
+        if (_serializable)
         {
             return base.RunTestMethodAsync(testMethod, method, testCases, constructorArguments);
         }

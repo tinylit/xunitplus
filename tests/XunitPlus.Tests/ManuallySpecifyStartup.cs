@@ -48,11 +48,18 @@ public class ManuallyStartup
 /// 指定启动。
 /// </summary>
 [Startup(typeof(ManuallyStartup), Shared = true)]
-public class ManuallySpecifyStartup(IDependencyInjectionByManuallySpecifyStartup dependency)
+public class ManuallySpecifyStartup
 {
+    private readonly IDependencyInjectionByManuallySpecifyStartup _dependency;
+
+    public ManuallySpecifyStartup(IDependencyInjectionByManuallySpecifyStartup dependency)
+    {
+        _dependency = dependency;
+    }
+
     /// <summary>
     /// 测试。
     /// </summary>
     [Fact]
-    public void Test() => dependency.Test();
+    public void Test() => _dependency.Test();
 }

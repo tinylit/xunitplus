@@ -5,15 +5,24 @@ using Microsoft.AspNetCore.Http;
 namespace XunitPlus.User.Tests;
 
 [AttributeUsage(AttributeTargets.Class)]
-public class UserAccountAttribute(long id, string role) : UserAttribute
+public class UserAccountAttribute : UserAttribute
 {
+    private readonly long _id;
+    private readonly string _role;
+
+    public UserAccountAttribute(long id, string role)
+    {
+        _id = id;
+        _role = role;
+    }
+
     public override ClaimsPrincipal CreateUser()
     {
         //? 指定账户信息。
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, id.ToString()),
-            new(ClaimTypes.Role, role),
+            new(ClaimTypes.Name, _id.ToString()),
+            new(ClaimTypes.Role, _role),
             new("timestamp", DateTime.Now.Ticks.ToString())
         };
 
@@ -23,11 +32,18 @@ public class UserAccountAttribute(long id, string role) : UserAttribute
 
 [UserAccount(1, "User")]
 [PatternSeek("XunitPlus.*")]
-public class UserTests(IHttpContextAccessor accessor)
+public class UserTests
 {
+    private readonly IHttpContextAccessor _accessor;
+
+    public UserTests(IHttpContextAccessor accessor)
+    {
+        _accessor = accessor;
+    }
+
     [Fact]
     public void Test()
     {
-        Debug.WriteLine(accessor!.HttpContext!.User.Identity!.Name);
+        Debug.WriteLine(_accessor!.HttpContext!.User.Identity!.Name);
     }
 }

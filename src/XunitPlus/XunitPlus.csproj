@@ -12,7 +12,7 @@
 		<Version>1.2.8</Version>
 
 		<Nullable>enable</Nullable>
-		<LangVersion>12.0</LangVersion>
+		<LangVersion>10.0</LangVersion>
 
 		<!-- 语法提示 -->
 		<Features>strict</Features>
