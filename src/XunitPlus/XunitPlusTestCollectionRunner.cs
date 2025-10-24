@@ -1,3 +1,4 @@
+using System.Reflection;
 using Xunit;
 
 namespace XunitPlus;
@@ -21,12 +22,14 @@ public class XunitPlusTestCollectionRunner : XunitTestCollectionRunner
     }
     protected override Task<RunSummary> RunTestClassAsync(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases)
     {
-        bool serializable = testClass.Class.GetCustomAttributes(typeof(SerializableAttribute)).Any()
-                            || testClass.Class.GetCustomAttributes(typeof(CollectionAttribute)).Any();
-
-        if (_contexts.TryGetValue(testClass, out var value))
+        if (_contexts.TryGetValue(testClass, out var context))
         {
-            return new XunitPlusTestClassRunner(value,
+            var serviceType = @class.ToRuntimeType();
+
+            bool serializable = serviceType.IsDefined(typeof(CollectionAttribute)) 
+                || serviceType.IsDefined(typeof(SerializableAttribute));
+
+            return new XunitPlusTestClassRunner(context,
                 serializable,
                 testClass,
                 @class,

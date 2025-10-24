@@ -9,7 +9,7 @@
 
 		<Title>xunit+</Title>
 		<PackageId>xunitPlus</PackageId>
-		<Version>1.2.8</Version>
+		<Version>1.2.9</Version>
 
 		<Nullable>enable</Nullable>
 		<LangVersion>10.0</LangVersion>
@@ -47,7 +47,7 @@
 		<Using Include="Xunit.Abstractions" />
 		<Using Include="Xunit.Sdk" />
 
-		<PackageReference Include="Inkslab.DI" Version="[1.2.16, 2.0.0)" />
+		<PackageReference Include="Inkslab.DI" Version="[1.2.18, 2.0.0)" />
 		<PackageReference Include="xunit.extensibility.execution" Version="[2.7.0, 3.0.0)" />
 	</ItemGroup>
 

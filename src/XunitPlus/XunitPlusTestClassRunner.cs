@@ -162,39 +162,6 @@ public class XunitPlusTestClassRunner : XunitTestClassRunner
         await _serviceScope.DisposeAsync();
     }
 
-    // This method has been slightly modified from the original implementation to run tests in parallel
-    protected override async Task<RunSummary> RunTestMethodsAsync()
-    {
-        IEnumerable<IXunitTestCase> orderedTestCases;
-        try
-        {
-            orderedTestCases = TestCaseOrderer.OrderTestCases(TestCases);
-        }
-        catch (Exception ex)
-        {
-            ex = ex.Unwrap();
-
-            DiagnosticMessageSink.OnMessage(new DiagnosticMessage(
-                $"Test case orderer '{TestCaseOrderer.GetType().FullName}' throw '{ex.GetType().FullName}' during ordering: {ex.Message}{Environment.NewLine}{ex.StackTrace}"));
-
-            orderedTestCases = TestCases;
-        }
-
-        var constructorArguments = CreateTestClassConstructorArguments();
-
-        var methodTasks = orderedTestCases.GroupBy(tc => tc.TestMethod, TestMethodComparer.Instance)
-            .Select(m => RunTestMethodAsync(m.Key, (IReflectionMethodInfo)m.Key.Method, m, constructorArguments));
-
-        var summary = new RunSummary();
-
-        foreach (var methodSummary in await Task.WhenAll(methodTasks))
-        {
-            summary.Aggregate(methodSummary);
-        }
-
-        return summary;
-    }
-
     /// <inheritdoc />
     protected override Task<RunSummary> RunTestMethodAsync(ITestMethod testMethod,
         IReflectionMethodInfo method, IEnumerable<IXunitTestCase> testCases, object?[] constructorArguments)

@@ -1,6 +1,7 @@
 using Inkslab;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Xunit;
 
 namespace XunitPlus;
 
@@ -45,28 +46,51 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
 
         var exceptions = new List<Exception>();
 
-        var results = new List<IXunitTestCase>();
+        var xunitTestCases = new List<IXunitTestCase>();
 
         var contexts = new Dictionary<ITestClass, DependencyInjectionContext>();
 
-        foreach (var group in testCases
-                     .GroupBy(tc => tc.TestMethod.TestClass))
+        var testRuntimeCases = testCases
+            .GroupBy(tc => tc.TestMethod.TestClass)
+            .ToList();
+
+        var testOutputHelperType = typeof(ITestOutputHelper);
+
+        foreach (var runtimeGroup in testRuntimeCases)
         {
             try
             {
-                var serviceType = group.Key.Class.ToRuntimeType();
+                var serviceType = runtimeGroup.Key.Class.ToRuntimeType();
+
+                bool isCollectionFixture = serviceType.IsDefined(typeof(CollectionAttribute));
+
+                var constructorArguments = serviceType.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+
+                var xuintDefault = isCollectionFixture || constructorArguments.Length == 0 || constructorArguments.Any(x =>
+                {
+                    var parameters = x.GetParameters();
+
+                    if (parameters.Length == 0)
+                    {
+                        return true;
+                    }
+
+                    return parameters.All(p => p.HasDefaultValue || p.ParameterType == testOutputHelperType);
+                });
 
                 //? 先触发静态构造函数，然后再进行宿主操作。
                 RuntimeHelpers.RunClassConstructor(serviceType.TypeHandle);
 
-                if (serviceType.GetConstructor(Type.EmptyTypes) is null)
-                {
-                    var context = _hostManager.CreateHost(serviceType);
+                xunitTestCases.AddRange(runtimeGroup);
 
-                    contexts.Add(group.Key, context);
+                if (xuintDefault)
+                {
+                    continue;
                 }
 
-                results.AddRange(group);
+                var context = _hostManager.CreateHost(serviceType);
+
+                contexts.Add(runtimeGroup.Key, context);
             }
             catch (Exception ex)
             {
@@ -84,7 +108,7 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
         }
 
         using var runner = new XunitPlusTestAssemblyRunner(contexts, TestAssembly,
-            results, DiagnosticMessageSink, executionMessageSink, executionOptions, exceptions);
+            xunitTestCases, DiagnosticMessageSink, executionMessageSink, executionOptions, exceptions);
 
         await runner.RunAsync();
 

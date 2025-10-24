@@ -19,7 +19,7 @@
 		</AssemblyAttribute>
 	</ItemGroup>
 
-    <Import Project="../../src/XunitPlus/xunitPlus.targets" />
+    <Import Project="../../src/XunitPlus/XunitPlus.targets" />
 
     <ItemGroup>        
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />

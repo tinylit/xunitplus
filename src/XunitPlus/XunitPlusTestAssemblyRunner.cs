@@ -15,7 +15,9 @@ public class XunitPlusTestAssemblyRunner : XunitTestAssemblyRunner
         executionMessageSink, executionOptions)
     {
         _contexts = contexts;
-        
+
+        TestCaseOrderer = new StepOrderer();
+
         foreach (var exception in exceptions)
         {
             Aggregator.Add(exception);

@@ -46,4 +46,10 @@ public class UserTests
     {
         Debug.WriteLine(_accessor!.HttpContext!.User.Identity!.Name);
     }
+
+    [Fact]
+    public void Test2()
+    {
+        Debug.WriteLine(_accessor!.HttpContext!.User.Identity!.IsAuthenticated);
+    }
 }
