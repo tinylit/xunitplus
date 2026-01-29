@@ -32,7 +32,7 @@ public class UserAccountAttribute : UserAttribute
     }
 }
 
-[Step(1)]
+[TestPriority(1)]
 [UserAccount(1, "User")]
 [PatternSeek("XunitPlus.*")]
 public class UserTests

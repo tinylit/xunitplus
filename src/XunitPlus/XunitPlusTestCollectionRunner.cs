@@ -5,10 +5,10 @@ namespace XunitPlus;
 
 public class XunitPlusTestCollectionRunner : XunitTestCollectionRunner
 {
-    private readonly IReadOnlyDictionary<ITestClass, DependencyInjectionContext> _contexts;
+    private readonly IReadOnlyDictionary<Type, DependencyInjectionContext> _contexts;
 
     public XunitPlusTestCollectionRunner(
-        IReadOnlyDictionary<ITestClass, DependencyInjectionContext> contexts,
+        IReadOnlyDictionary<Type, DependencyInjectionContext> contexts,
         ITestCollection testCollection,
         IEnumerable<IXunitTestCase> testCases,
         IMessageSink diagnosticMessageSink,
@@ -22,11 +22,11 @@ public class XunitPlusTestCollectionRunner : XunitTestCollectionRunner
     }
     protected override Task<RunSummary> RunTestClassAsync(ITestClass testClass, IReflectionTypeInfo @class, IEnumerable<IXunitTestCase> testCases)
     {
-        if (_contexts.TryGetValue(testClass, out var context))
-        {
-            var serviceType = @class.ToRuntimeType();
+        var serviceType = @class.ToRuntimeType();
 
-            bool serializable = serviceType.IsDefined(typeof(CollectionAttribute)) 
+        if (_contexts.TryGetValue(serviceType, out var context))
+        {
+            bool serializable = serviceType.IsDefined(typeof(CollectionAttribute))
                 || serviceType.IsDefined(typeof(SerializableAttribute));
 
             return new XunitPlusTestClassRunner(context,

@@ -2,10 +2,10 @@ namespace XunitPlus;
 
 public class XunitPlusTestAssemblyRunner : XunitTestAssemblyRunner
 {
-    private readonly IReadOnlyDictionary<ITestClass, DependencyInjectionContext> _contexts;
+    private readonly IReadOnlyDictionary<Type, DependencyInjectionContext> _contexts;
 
     public XunitPlusTestAssemblyRunner(
-        IReadOnlyDictionary<ITestClass, DependencyInjectionContext> contexts,
+        IReadOnlyDictionary<Type, DependencyInjectionContext> contexts,
         IReadOnlyDictionary<Guid, Type> uniqueTypes,
         ITestAssembly testAssembly,
         IEnumerable<IXunitTestCase> testCases,

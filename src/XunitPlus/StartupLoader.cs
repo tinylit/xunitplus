@@ -56,10 +56,8 @@ internal static class StartupLoader
 
         hostBuilder.ConfigureServices(services =>
         {
-            // ITestOutputHelper 不应该通过 DI 容器注册
-            // xUnit 会在每个测试用例运行时自动创建和初始化它
-            // 如果通过 DI 注册，会导致 "There is no currently active test" 错误
-
+            services.TryAddScoped<ITestOutputHelper, TestOutputHelper>();
+            
             services.TryAddSingleton<IHttpContextAccessor>(new HttpContextAccessor
             {
                 HttpContext = new DefaultHttpContext()

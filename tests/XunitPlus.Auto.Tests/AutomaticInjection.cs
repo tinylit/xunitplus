@@ -221,10 +221,12 @@ public class XunitNonAutomaticInjectionStepTest
 public class StepTest
 {
     private readonly IDependencyInjectionByAutomaticInjection _dependency;
+    private readonly ITestOutputHelper _outputHelper;
 
-    public StepTest(IDependencyInjectionByAutomaticInjection dependency)
+    public StepTest(IDependencyInjectionByAutomaticInjection dependency,ITestOutputHelper outputHelper)
     {
         _dependency = dependency;
+        _outputHelper = outputHelper;
     }
 
     [Fact]
@@ -381,5 +383,15 @@ public class StepTest
     public void Test22()
     {
         Debug.WriteLine("测试步骤执行 22。");
+    }
+
+    [Theory]
+    [Step(23)]
+    [InlineData("Test message for Test23")]
+    [InlineData("Another test message for Test23")]
+    [InlineData("Final test message for Test23")]
+    public void Test23(string msg)
+    {
+        _outputHelper.WriteLine(msg);
     }
 }

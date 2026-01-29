@@ -1,4 +1,5 @@
 using Inkslab;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -6,6 +7,29 @@ namespace XunitPlus;
 
 public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
 {
+    private class XunitTestCaseComparer : IEqualityComparer<ITestClass>
+    {
+        public bool Equals(ITestClass? x, ITestClass? y)
+        {
+            if (x is null && y is null)
+            {
+                return true;
+            }
+
+            if (x is null || y is null)
+            {
+                return false;
+            }
+
+            return x.TestCollection.UniqueID == y.TestCollection.UniqueID;
+        }
+
+        public int GetHashCode([DisallowNull] ITestClass obj) => obj.TestCollection.UniqueID.GetHashCode();
+
+
+        public static readonly XunitTestCaseComparer Instance = new();
+    }
+
     private readonly Assembly _assembly;
     private readonly HostManager _hostManager;
 
@@ -26,7 +50,7 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
         if (patternSeeks.Length == 0)
         {
             using var startup = new XStartup("Inkslab.*.dll");
-            
+
             startup.DoStartup();
         }
         else
@@ -37,40 +61,31 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
                 .ToArray();
 
             using var startup = new XStartup(patterns);
-            
+
             startup.DoStartup();
         }
 
         var exceptions = new List<Exception>();
 
-        var xunitTestCases = new List<IXunitTestCase>();
+        var xunitTestCases = new List<IXunitTestCase>(testCases);
 
-        var contexts = new Dictionary<ITestClass, DependencyInjectionContext>();
+        var contexts = new Dictionary<Type, DependencyInjectionContext>();
 
-        var testRuntimeCases = testCases
-            .GroupBy(tc => tc.TestMethod.TestClass)
-            .ToList();
+        var uniqueTypes = xunitTestCases.GroupBy(tc => tc.TestMethod.TestClass, XunitTestCaseComparer.Instance).ToDictionary(g => g.Key.TestCollection.UniqueID, g => g.Key.Class.ToRuntimeType());
 
-        var uniqueTypes = new Dictionary<Guid, Type>();
-
-        foreach (var runtimeGroup in testRuntimeCases)
+        foreach (var serviceType in xunitTestCases
+            .Select(tc => tc.TestMethod.TestClass.Class.ToRuntimeType())
+            .Distinct()
+        )
         {
             try
             {
-                var testClassType = runtimeGroup.Key;
-                
-                var serviceType = testClassType.Class.ToRuntimeType();
-
                 //? 先触发静态构造函数，然后再进行宿主操作。
                 RuntimeHelpers.RunClassConstructor(serviceType.TypeHandle);
 
-                xunitTestCases.AddRange(runtimeGroup);
-
                 var context = _hostManager.CreateHost(serviceType);
 
-                contexts.Add(testClassType, context);
-                
-                uniqueTypes.Add(testClassType.TestCollection.UniqueID, serviceType);
+                contexts.Add(serviceType, context);
             }
             catch (Exception ex)
             {

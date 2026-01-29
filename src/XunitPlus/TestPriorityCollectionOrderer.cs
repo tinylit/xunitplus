@@ -25,9 +25,9 @@ namespace XunitPlus
 
         private static int Step(Type type)
         {
-            return type.GetCustomAttributes(typeof(StepAttribute), true)
-                .Cast<StepAttribute>()
-                .Select(x => x.Priority)
+            return type.GetCustomAttributes(typeof(TestPriorityAttribute), true)
+                .Cast<TestPriorityAttribute>()
+                .Select(x => x.Value)
                 .DefaultIfEmpty(int.MaxValue)
                 .Min();
         }
