@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
 namespace XunitPlus.User.Tests;
@@ -38,11 +39,13 @@ public class UserTests
 {
     private readonly IHttpContextAccessor _accessor;
     private readonly ITestOutputHelper _output;
+    private readonly ILogger<UserTests> _logger;
 
-    public UserTests(IHttpContextAccessor accessor, ITestOutputHelper output)
+    public UserTests(IHttpContextAccessor accessor, ITestOutputHelper output, ILogger<UserTests> logger)
     {
         _accessor = accessor;
         _output = output;
+        _logger = logger;
     }
 
     [Fact]
@@ -56,6 +59,7 @@ public class UserTests
     public void Test2()
     {
         _output.WriteLine("Test2-1");
+        _logger.LogInformation("Test2-1-LogInformation");
         Debug.WriteLine(_accessor!.HttpContext!.User.Identity!.IsAuthenticated);
     }
 }

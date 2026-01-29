@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace XunitPlus;
 
@@ -43,13 +44,21 @@ internal static class StartupLoader
             hostBuilder.ConfigureServices(services => services.TryAddSingleton(diagnosticMessageSink));
         }
 
+        // 配置日志记录
+        hostBuilder.ConfigureServices(services =>
+        {
+            services.AddLogging(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Debug));
+        });
+
         ConfigureHost(hostBuilder, startup, startupType, configureHostMethod);
 
         ConfigureServices(hostBuilder, startup, startupType, configureServicesMethod);
 
         hostBuilder.ConfigureServices(services =>
         {
-            services.TryAddSingleton<ITestOutputHelper, TestOutputHelper>();
+            // ITestOutputHelper 不应该通过 DI 容器注册
+            // xUnit 会在每个测试用例运行时自动创建和初始化它
+            // 如果通过 DI 注册，会导致 "There is no currently active test" 错误
 
             services.TryAddSingleton<IHttpContextAccessor>(new HttpContextAccessor
             {
@@ -233,7 +242,7 @@ internal static class StartupLoader
             _ => throw new InvalidOperationException(
                 $"The '{method.Name}' method in the type '{startupType.FullName}' must have a 'IServiceCollection' parameter and optional 'HostBuilderContext' parameter.")
         };
-        
+
         builder.ConfigureServices(configureDelegate);
     }
 

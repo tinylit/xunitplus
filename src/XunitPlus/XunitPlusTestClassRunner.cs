@@ -70,6 +70,12 @@ public class XunitPlusTestClassRunner : XunitTestClassRunner
     protected override bool TryGetConstructorArgument(ConstructorInfo constructor, int index, ParameterInfo parameter,
         out object? argumentValue)
     {
+        // 先让基类尝试解析（基类会处理 ITestOutputHelper、fixture 等特殊类型）
+        if (base.TryGetConstructorArgument(constructor, index, parameter, out argumentValue))
+        {
+            return true;
+        }
+
         if (parameter.HasDefaultValue)
         {
             argumentValue = parameter.DefaultValue;
@@ -93,6 +99,7 @@ public class XunitPlusTestClassRunner : XunitTestClassRunner
             return true;
         }
 
+        // 从 DI 容器获取
         argumentValue = _serviceScope.ServiceProvider.GetService(parameter.ParameterType);
 
         return argumentValue != null;
