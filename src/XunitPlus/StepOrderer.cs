@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace XunitPlus;
 
 /// <summary>
@@ -16,15 +18,15 @@ public class StepOrderer : ITestCaseOrderer
     {
         // 直接返回原始顺序，不进行重新排序
         return testCases.OrderBy(tc =>
-                    {
-                        var method = tc.TestMethod.Method.ToRuntimeMethod();
+            {
+                var method = tc.TestMethod.Method.ToRuntimeMethod();
 
-                        return method.GetCustomAttributes(typeof(StepAttribute), true)
-                            .Cast<StepAttribute>()
-                            .Select(x => x.Priority)
-                            .DefaultIfEmpty(int.MaxValue)
-                            .Min();
-                    })
-                    .ThenBy(tc => tc.TestMethod.Method.Name);
+                return method.GetCustomAttributes(typeof(StepAttribute), true)
+                    .Cast<StepAttribute>()
+                    .Select(x => x.Priority)
+                    .DefaultIfEmpty(int.MaxValue)
+                    .Min();
+            })
+            .ThenBy(tc => tc.TestMethod.Method.Name);
     }
 }

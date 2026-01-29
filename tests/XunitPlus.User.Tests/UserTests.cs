@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Xunit.Abstractions;
 
 namespace XunitPlus.User.Tests;
 
@@ -30,26 +31,59 @@ public class UserAccountAttribute : UserAttribute
     }
 }
 
+[Step(1)]
 [UserAccount(1, "User")]
 [PatternSeek("XunitPlus.*")]
 public class UserTests
 {
     private readonly IHttpContextAccessor _accessor;
+    private readonly ITestOutputHelper _output;
 
-    public UserTests(IHttpContextAccessor accessor)
+    public UserTests(IHttpContextAccessor accessor, ITestOutputHelper output)
     {
         _accessor = accessor;
+        _output = output;
     }
 
     [Fact]
     public void Test()
     {
+        _output.WriteLine("Test-1");
         Debug.WriteLine(_accessor!.HttpContext!.User.Identity!.Name);
     }
 
     [Fact]
     public void Test2()
     {
+        _output.WriteLine("Test2-1");
+        Debug.WriteLine(_accessor!.HttpContext!.User.Identity!.IsAuthenticated);
+    }
+}
+
+[UserAccount(1, "User")]
+[PatternSeek("XunitPlus.*")]
+public class UserTests2
+{
+    private readonly IHttpContextAccessor _accessor;
+    private readonly ITestOutputHelper _output;
+
+    public UserTests2(IHttpContextAccessor accessor, ITestOutputHelper output)
+    {
+        _accessor = accessor;
+        _output = output;
+    }
+
+    [Fact]
+    public void Test()
+    {
+        _output.WriteLine("2Test-1");
+        Debug.WriteLine(_accessor!.HttpContext!.User.Identity!.Name);
+    }
+
+    [Fact]
+    public void Test2()
+    {
+        _output.WriteLine("2Test2-1");
         Debug.WriteLine(_accessor!.HttpContext!.User.Identity!.IsAuthenticated);
     }
 }

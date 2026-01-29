@@ -9,7 +9,7 @@
 
 		<Title>xunit+</Title>
 		<PackageId>xunitPlus</PackageId>
-		<Version>1.2.9</Version>
+		<Version>1.2.10</Version>
 
 		<Nullable>enable</Nullable>
 		<LangVersion>10.0</LangVersion>

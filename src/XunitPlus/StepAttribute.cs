@@ -3,7 +3,7 @@ namespace XunitPlus
     /// <summary>
     /// 标记一个方法为测试步骤，可选指定执行顺序的优先级。
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public sealed class StepAttribute : Attribute
     {
         /// <summary>

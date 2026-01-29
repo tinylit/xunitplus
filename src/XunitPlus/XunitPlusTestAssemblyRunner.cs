@@ -6,6 +6,7 @@ public class XunitPlusTestAssemblyRunner : XunitTestAssemblyRunner
 
     public XunitPlusTestAssemblyRunner(
         IReadOnlyDictionary<ITestClass, DependencyInjectionContext> contexts,
+        IReadOnlyDictionary<Guid, Type> uniqueTypes,
         ITestAssembly testAssembly,
         IEnumerable<IXunitTestCase> testCases,
         IMessageSink diagnosticMessageSink,
@@ -18,13 +19,16 @@ public class XunitPlusTestAssemblyRunner : XunitTestAssemblyRunner
 
         TestCaseOrderer = new StepOrderer();
 
+        TestCollectionOrderer = new StepCollectionOrderer(uniqueTypes);
+
         foreach (var exception in exceptions)
         {
             Aggregator.Add(exception);
         }
     }
 
-    protected override Task<RunSummary> RunTestCollectionAsync(IMessageBus messageBus, ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases, CancellationTokenSource cancellationTokenSource)
+    protected override Task<RunSummary> RunTestCollectionAsync(IMessageBus messageBus, ITestCollection testCollection, IEnumerable<IXunitTestCase> testCases,
+        CancellationTokenSource cancellationTokenSource)
         => new XunitPlusTestCollectionRunner(_contexts, testCollection, testCases, DiagnosticMessageSink,
             messageBus, TestCaseOrderer, new(Aggregator), cancellationTokenSource).RunAsync();
 }

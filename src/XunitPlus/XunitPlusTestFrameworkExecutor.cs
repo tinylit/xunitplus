@@ -1,7 +1,6 @@
 using Inkslab;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Xunit;
 
 namespace XunitPlus;
 
@@ -24,24 +23,22 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
     {
         var patternSeeks = _assembly.GetCustomAttributes(typeof(PatternSeekAttribute), true);
 
-        if (patternSeeks is null || patternSeeks.Length == 0)
+        if (patternSeeks.Length == 0)
         {
-            using (var startup = new XStartup("Inkslab.*.dll"))
-            {
-                startup.DoStartup();
-            }
+            using var startup = new XStartup("Inkslab.*.dll");
+            
+            startup.DoStartup();
         }
         else
         {
-            var pattarns = patternSeeks
+            var patterns = patternSeeks
                 .Cast<PatternSeekAttribute>()
                 .Select(x => x.Pattern)
                 .ToArray();
 
-            using (var startup = new XStartup(pattarns))
-            {
-                startup.DoStartup();
-            }
+            using var startup = new XStartup(patterns);
+            
+            startup.DoStartup();
         }
 
         var exceptions = new List<Exception>();
@@ -54,43 +51,26 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
             .GroupBy(tc => tc.TestMethod.TestClass)
             .ToList();
 
-        var testOutputHelperType = typeof(ITestOutputHelper);
+        var uniqueTypes = new Dictionary<Guid, Type>();
 
         foreach (var runtimeGroup in testRuntimeCases)
         {
             try
             {
-                var serviceType = runtimeGroup.Key.Class.ToRuntimeType();
-
-                bool isCollectionFixture = serviceType.IsDefined(typeof(CollectionAttribute));
-
-                var constructorArguments = serviceType.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
-
-                var xuintDefault = isCollectionFixture || constructorArguments.Length == 0 || constructorArguments.Any(x =>
-                {
-                    var parameters = x.GetParameters();
-
-                    if (parameters.Length == 0)
-                    {
-                        return true;
-                    }
-
-                    return parameters.All(p => p.HasDefaultValue || p.ParameterType == testOutputHelperType);
-                });
+                var testClassType = runtimeGroup.Key;
+                
+                var serviceType = testClassType.Class.ToRuntimeType();
 
                 //? 先触发静态构造函数，然后再进行宿主操作。
                 RuntimeHelpers.RunClassConstructor(serviceType.TypeHandle);
 
                 xunitTestCases.AddRange(runtimeGroup);
 
-                if (xuintDefault)
-                {
-                    continue;
-                }
-
                 var context = _hostManager.CreateHost(serviceType);
 
-                contexts.Add(runtimeGroup.Key, context);
+                contexts.Add(testClassType, context);
+                
+                uniqueTypes.Add(testClassType.TestCollection.UniqueID, serviceType);
             }
             catch (Exception ex)
             {
@@ -100,18 +80,18 @@ public class XunitPlusTestFrameworkExecutor : XunitTestFrameworkExecutor
 
         try
         {
-            await _hostManager.StartAsync(default);
+            await _hostManager.StartAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
             exceptions.Add(ex);
         }
 
-        using var runner = new XunitPlusTestAssemblyRunner(contexts, TestAssembly,
+        using var runner = new XunitPlusTestAssemblyRunner(contexts, uniqueTypes, TestAssembly,
             xunitTestCases, DiagnosticMessageSink, executionMessageSink, executionOptions, exceptions);
 
         await runner.RunAsync();
 
-        await _hostManager.StopAsync(default);
+        await _hostManager.StopAsync(CancellationToken.None);
     }
 }
