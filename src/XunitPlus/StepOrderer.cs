@@ -3,13 +3,13 @@ using Xunit;
 namespace XunitPlus;
 
 /// <summary>
-/// 保持测试用例的原始顺序，不进行重新排序。
-/// 用于保留已经按照 StepAttribute 排序的测试用例顺序。
+/// 按照 <see cref="StepAttribute"/> 的优先级对测试用例进行排序。
+/// 优先级值越小越先执行，未标记的测试用例排在最后。
 /// </summary>
 public class StepOrderer : ITestCaseOrderer
 {
     /// <summary>
-    /// 返回测试用例的原始顺序，不进行任何排序操作。
+    /// 按照 <see cref="StepAttribute.Priority"/> 升序排列测试用例，相同优先级按方法名排序。
     /// </summary>
     /// <typeparam name="TTestCase">测试用例的类型。</typeparam>
     /// <param name="testCases">要排序的测试用例集合。</param>

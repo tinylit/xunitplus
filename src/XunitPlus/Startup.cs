@@ -30,39 +30,24 @@ public class Startup
     /// <param name="context">上下文。</param>
     public virtual void ConfigureServices(IServiceCollection services, HostBuilderContext context)
     {
-        var patternSeeks = _serviceType.GetCustomAttributes<PatternSeekAttribute>();
-
-        if (patternSeeks is null)
-        {
-            patternSeeks = _serviceType.Assembly.GetCustomAttributes<PatternSeekAttribute>();
-        }
-        else
-        {
-            patternSeeks = patternSeeks.Union(_serviceType.Assembly.GetCustomAttributes<PatternSeekAttribute>() ?? Array.Empty<PatternSeekAttribute>());
-        }
+        var patternSeeks = _serviceType.GetCustomAttributes<PatternSeekAttribute>()
+            .Union(_serviceType.Assembly.GetCustomAttributes<PatternSeekAttribute>());
 
         var dependencyInjectionServices = services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>()
             .DependencyInjection(new DependencyInjectionOptions(), context, context.Configuration, context.HostingEnvironment);
 
-        if (patternSeeks is null)
+        var patterns = patternSeeks
+            .Select(x => x.Pattern)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (patterns.Length == 0)
         {
             dependencyInjectionServices = dependencyInjectionServices.SeekAssemblies();
         }
         else
         {
-            var pattarns = patternSeeks
-                .Select(x => x.Pattern)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            if (pattarns.Length == 0)
-            {
-                dependencyInjectionServices = dependencyInjectionServices.SeekAssemblies();
-            }
-            else
-            {
-                dependencyInjectionServices = dependencyInjectionServices.SeekAssemblies(pattarns);
-            }
+            dependencyInjectionServices = dependencyInjectionServices.SeekAssemblies(patterns);
         }
 
         dependencyInjectionServices.ConfigureByDefined()

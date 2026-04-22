@@ -103,10 +103,7 @@ internal static class StartupLoader
                 }
             }
 
-            if (features is null)
-            {
-            }
-            else
+            if (features is not null)
             {
                 var requestFeature = features.Get<IHttpRequestFeature>();
 

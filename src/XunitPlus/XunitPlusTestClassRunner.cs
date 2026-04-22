@@ -1,10 +1,11 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace XunitPlus;
 
 public class XunitPlusTestClassRunner : XunitTestClassRunner
 {
+    private readonly IDictionary<Type, object> _collectionFixtureMappings;
     private readonly AsyncServiceScope _serviceScope;
     private readonly bool _serializable;
 
@@ -23,17 +24,15 @@ public class XunitPlusTestClassRunner : XunitTestClassRunner
         : base(testClass, @class, testCases, diagnosticMessageSink,
             messageBus, testCaseOrderer, aggregator, cancellationTokenSource, collectionFixtureMappings)
     {
+        _collectionFixtureMappings = collectionFixtureMappings;
         _serviceScope = context.Services.CreateAsyncScope();
         _serializable = serializable;
-        CollectionFixtureMappings = collectionFixtureMappings;
     }
-
-    private IDictionary<Type, object> CollectionFixtureMappings { get; }
 
     /// <inheritdoc />
     protected override object?[] CreateTestClassConstructorArguments()
     {
-        if ((!Class.Type.IsAbstract ? 0 : Class.Type.IsSealed ? 1 : 0) != 0)
+        if (Class.Type.IsAbstract && Class.Type.IsSealed) // static class
         {
             return Array.Empty<object?>();
         }
@@ -123,7 +122,7 @@ public class XunitPlusTestClassRunner : XunitTestClassRunner
         var missingParameters = new List<ParameterInfo>();
         var ctorArgs = ctors[0].GetParameters().Select(p =>
         {
-            if (CollectionFixtureMappings.TryGetValue(p.ParameterType, out var arg))
+            if (_collectionFixtureMappings.TryGetValue(p.ParameterType, out var arg))
             {
                 return arg;
             }
@@ -153,18 +152,6 @@ public class XunitPlusTestClassRunner : XunitTestClassRunner
     protected override async Task BeforeTestClassFinishedAsync()
     {
         await base.BeforeTestClassFinishedAsync();
-
-        foreach (var fixture in CollectionFixtureMappings.Values)
-        {
-            if (fixture is IAsyncDisposable asyncDisposable)
-            {
-                await Aggregator.RunAsync(() => asyncDisposable.DisposeAsync().AsTask());
-            }
-            else if (fixture is IDisposable disposable)
-            {
-                Aggregator.Run(disposable.Dispose);
-            }
-        }
 
         await _serviceScope.DisposeAsync();
     }
