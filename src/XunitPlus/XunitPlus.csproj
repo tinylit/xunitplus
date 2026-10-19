@@ -9,7 +9,7 @@
 
 		<Title>xunit+</Title>
 		<PackageId>xunitPlus</PackageId>
-		<Version>1.2.13</Version>
+		<Version>1.2.14</Version>
 
 		<Nullable>enable</Nullable>
 		<!-- Use the SDK's language default for each TFM: C# 10 / 12 / 14. -->
