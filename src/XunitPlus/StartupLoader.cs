@@ -1,4 +1,7 @@
 using System.Reflection;
+#if NET8_0_OR_GREATER
+using System.Runtime.CompilerServices;
+#endif
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +13,14 @@ namespace XunitPlus;
 
 internal static class StartupLoader
 {
+#if NET8_0_OR_GREATER
+    [InlineArray(8)]
+    private struct ConfigureArguments
+    {
+        private object? _element0;
+    }
+#endif
+
     public static DependencyInjectionContext CreateHost(Type serviceType, Type startupType, AssemblyName? assemblyName, IMessageSink? diagnosticMessageSink)
     {
         var (hostBuilder, startup, buildHostMethod, configureMethod) =
@@ -121,7 +132,10 @@ internal static class StartupLoader
 
                 foreach (var headerAttr in headerAttrs)
                 {
+                    // Duplicate headers remain an error, as on the .NET 6 path.
+#pragma warning disable ASP0019
                     requestFeature.Headers.Add(headerAttr.Key, headerAttr.StringValues);
+#pragma warning restore ASP0019
                 }
             }
         }
@@ -180,7 +194,11 @@ internal static class StartupLoader
         var parameters = method.GetParameters();
         if (parameters.Length == 0)
         {
+#if NET8_0_OR_GREATER
+            return (IHostBuilder?)StartupMethodInvoker.Invoke(method, method.IsStatic ? null : startup, []);
+#else
             return (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, Array.Empty<object>());
+#endif
         }
 
         if (parameters.Length > 1 || parameters[0].ParameterType != typeof(AssemblyName))
@@ -189,10 +207,17 @@ internal static class StartupLoader
                 $"The '{method.Name}' method of startup type '{startupType.FullName}' must parameterless or have the single 'AssemblyName' parameter.");
         }
 
-        return assemblyName is null
-            ? throw new InvalidOperationException(
-                $"The '{method.Name}' method of startup type '{startupType.FullName}' must parameterless when use XunitWebApplicationFactory.")
-            : (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, new object[] { assemblyName });
+        if (assemblyName is null)
+        {
+            throw new InvalidOperationException(
+                $"The '{method.Name}' method of startup type '{startupType.FullName}' must parameterless when use XunitWebApplicationFactory.");
+        }
+
+#if NET8_0_OR_GREATER
+        return (IHostBuilder?)StartupMethodInvoker.Invoke(method, method.IsStatic ? null : startup, [assemblyName]);
+#else
+        return (IHostBuilder?)method.Invoke(method.IsStatic ? null : startup, new object[] { assemblyName });
+#endif
     }
 
     public static void ConfigureHost(IHostBuilder builder, object? startup, Type startupType, MethodInfo? method)
@@ -210,7 +235,11 @@ internal static class StartupLoader
                 $"The '{method.Name}' method of startup type '{startupType.FullName}' must have the single 'IHostBuilder' parameter.");
         }
 
+#if NET8_0_OR_GREATER
+        StartupMethodInvoker.Invoke(method, method.IsStatic ? null : startup, [builder]);
+#else
         method.Invoke(method.IsStatic ? null : startup, new object[] { builder });
+#endif
     }
 
     public static void ConfigureServices(IHostBuilder builder, object? startup, Type startupType, MethodInfo? method)
@@ -224,6 +253,18 @@ internal static class StartupLoader
 
         Action<HostBuilderContext, IServiceCollection> configureDelegate = parameters.Length switch
         {
+#if NET8_0_OR_GREATER
+            1 when parameters[0].ParameterType == typeof(IServiceCollection) =>
+                (_, services) => StartupMethodInvoker.Invoke(method, method.IsStatic ? null : startup, [services]),
+            2 when parameters[0].ParameterType == typeof(IServiceCollection) &&
+                   parameters[1].ParameterType == typeof(HostBuilderContext) =>
+                (context, services) =>
+                    StartupMethodInvoker.Invoke(method, method.IsStatic ? null : startup, [services, context]),
+            2 when parameters[1].ParameterType == typeof(IServiceCollection) &&
+                   parameters[0].ParameterType == typeof(HostBuilderContext) =>
+                (context, services) =>
+                    StartupMethodInvoker.Invoke(method, method.IsStatic ? null : startup, [context, services]),
+#else
             1 when parameters[0].ParameterType == typeof(IServiceCollection) =>
                 (_, services) => method.Invoke(method.IsStatic ? null : startup, new object[] { services }),
             2 when parameters[0].ParameterType == typeof(IServiceCollection) &&
@@ -234,6 +275,7 @@ internal static class StartupLoader
                    parameters[0].ParameterType == typeof(HostBuilderContext) =>
                 (context, services) =>
                     method.Invoke(method.IsStatic ? null : startup, new object[] { context, services }),
+#endif
             _ => throw new InvalidOperationException(
                 $"The '{method.Name}' method in the type '{startupType.FullName}' must have a 'IServiceCollection' parameter and optional 'HostBuilderContext' parameter.")
         };
@@ -251,10 +293,25 @@ internal static class StartupLoader
 
         using var scope = provider.CreateScope();
 
+#if NET8_0_OR_GREATER
+        var parameters = method.GetParameters();
+        ConfigureArguments buffer = default;
+        Span<object?> arguments = parameters.Length <= 8
+            ? buffer[..parameters.Length]
+            : new object?[parameters.Length];
+
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            arguments[i] = scope.ServiceProvider.GetRequiredService(parameters[i].ParameterType);
+        }
+
+        StartupMethodInvoker.Invoke(method, method.IsStatic ? null : startup, arguments);
+#else
         method.Invoke(method.IsStatic ? null : startup, method.GetParameters()
             .Select(p => p.ParameterType)
             .Select(scope.ServiceProvider.GetRequiredService)
             .ToArray());
+#endif
     }
 
     public static IHost? BuildHost(IHostBuilder hostBuilder, object? startup, Type startupType, MethodInfo? method)
@@ -272,10 +329,17 @@ internal static class StartupLoader
 
         var parameters = method.GetParameters();
 
-        return parameters.Length != 1 || parameters[0].ParameterType != typeof(IHostBuilder)
-            ? throw new InvalidOperationException(
-                $"The '{method.Name}' method of startup type '{startupType.FullName}' must have the single 'IHostBuilder' parameter.")
-            : (IHost?)method.Invoke(method.IsStatic ? null : startup, new object[] { hostBuilder });
+        if (parameters.Length != 1 || parameters[0].ParameterType != typeof(IHostBuilder))
+        {
+            throw new InvalidOperationException(
+                $"The '{method.Name}' method of startup type '{startupType.FullName}' must have the single 'IHostBuilder' parameter.");
+        }
+
+#if NET8_0_OR_GREATER
+        return (IHost?)StartupMethodInvoker.Invoke(method, method.IsStatic ? null : startup, [hostBuilder]);
+#else
+        return (IHost?)method.Invoke(method.IsStatic ? null : startup, new object[] { hostBuilder });
+#endif
     }
 
     public static MethodInfo? FindMethod(Type startupType, MethodInfo[] methodInfos, string methodName) =>

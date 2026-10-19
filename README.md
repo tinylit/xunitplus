@@ -5,6 +5,7 @@ name: xunit+
 package_id: xunitPlus
 type: xunit-extension-framework
 platform: .NET 6+
+target_frameworks: net6.0, net8.0, net10.0
 dependencies: xunit 2.7+, Inkslab.DI 1.2.24+
 features: auto-dependency-injection, startup-configuration, step-ordering, test-priority, httpcontext-simulation
 -->
@@ -41,6 +42,27 @@ features: auto-dependency-injection, startup-configuration, step-ordering, test-
 ```bash
 dotnet add package xunitPlus
 ```
+
+### 框架支持与构建
+
+NuGet 包分别提供以下程序集，消费项目自动选择匹配的目标框架：
+
+| 目标框架 | 本库默认 C# 版本 | 启动方法调用 |
+|----------|----------------|--------------|
+| .NET 6 | C# 10 | `MethodInfo.Invoke` |
+| .NET 8 | C# 12 | 缓存 `MethodInvoker`，使用 Span 参数与内联缓冲区减少分配 |
+| .NET 10 | C# 14 | 复用 .NET 8+ 的优化路径 |
+
+从源码构建完整解决方案需要 **.NET 10 SDK**；运行所有测试还需要 .NET 6、8、10 的 .NET 与 ASP.NET Core 运行时。语言版本采用 SDK 对各目标框架的稳定默认值。
+
+```bash
+dotnet test "xunit+.sln" -c Release
+dotnet pack src/XunitPlus/XunitPlus.csproj -c Release -o artifacts/packages
+```
+
+通过 `NET8_0_OR_GREATER` 条件编译，C# 12 集合表达式生成 Span 参数，`InlineArray` 为最多 8 个 `Configure` 参数提供内联存储，超过 8 个参数时使用数组。保留原有服务解析顺序与 `TargetInvocationException` 异常包装。NuGet 发布的是各框架对应的编译产物，优化不依赖消费项目使用相同的 C# 版本。
+
+性能对比和复现命令见 [反射调用基准](benchmarks/ReflectionInvocation/README.md)。C# 14 已随 .NET 10 启用；目前没有发现适合本项目、且已验证能进一步提速的专属语法改写。
 
 ### 配置 `.csproj`
 
